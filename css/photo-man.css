@@ -1,0 +1,31 @@
+html, body, #wrapper, #main-content, #main-grid
+{
+	height: 100%;
+	min-height: 100%;
+	background-color: #000000;
+}
+
+#main-nav
+{
+	min-height: 30px;
+}
+
+#main-nav .container-fluid
+{
+	padding-left: 0px;
+	//padding-right: 0px;
+}
+
+#main-panes
+{
+	height: 100%;
+	min-height: 100%;
+	margin-bottom: -40px;
+}
+
+#footer
+{
+	height: 40px;
+	min-height: 40px;
+	background-color: #333333;
+}

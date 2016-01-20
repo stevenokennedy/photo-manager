@@ -2,9 +2,9 @@
   "name": "photo-manager",
   "version": "0.0.1",
   "description": "A useful photo management application",
-  "main": "main.js",
+  "main": "bootstrapper.js",
   "scripts": {
-    "start": "electron main.js"
+    "start": "electron ."
   },
   "keywords": [
     "Photo",
