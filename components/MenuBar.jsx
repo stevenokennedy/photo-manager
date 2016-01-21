@@ -25,10 +25,10 @@ export default class MenuBar extends React.Component {
 					<NavDropdown title="Edit">
 					</NavDropdown>
 				</Nav>
-				<Nav pullRight onSelect={this.handleWindowOperation}>
-					<NavItem eventKey={"min"}>_</NavItem>
-					<NavItem eventKey={"max"}>[]</NavItem>
-					<NavItem eventKey={"close"}>X</NavItem>
+				<Nav id="window-operations" pullRight onSelect={this.handleWindowOperation}>
+					<NavItem eventKey={"min"} className="min-op-icon"><span>&nbsp;</span></NavItem>
+					<NavItem eventKey={"max"} className="max-op-icon"><span>&nbsp;</span></NavItem>
+					<NavItem eventKey={"close"} className="close-op-icon"><span>&nbsp;</span></NavItem>
 				</Nav>
 			</Navbar>
 		)
@@ -42,7 +42,7 @@ export default class MenuBar extends React.Component {
 				this.window.minimize();
 				break;
 			case "max": 
-				this.window.maximize();
+				this.window.isMaximized() ? this.window.unmaximize() : this.window.maximize();
 				break;
 			case "close":
 				this.window.close();

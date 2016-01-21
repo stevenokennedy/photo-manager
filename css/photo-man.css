@@ -14,6 +14,43 @@ html, body, #wrapper, #main-content, #main-grid
 {
 	padding-left: 0px;
 	//padding-right: 0px;
+	-webkit-app-region: drag;
+}
+
+#window-operations
+{
+	-webkit-app-region: no-drag;
+}
+
+.min-op-icon:hover, .max-op-icon:hover, .close-op-icon:hover
+{
+	background-color: #444444;
+}
+
+.close-op-icon:hover
+{
+	background-color: #8E151F;
+}
+
+.min-op-icon span, .max-op-icon span, .close-op-icon span
+{	
+    width: 16px;
+    display: inline-block;
+}
+
+.min-op-icon span
+{
+	background: url("../images/minimize.png") no-repeat;
+}
+
+.max-op-icon span
+{
+	background: url("../images/restore.png") no-repeat;
+}
+
+.close-op-icon span
+{
+	background: url("../images/close.png") no-repeat;
 }
 
 #main-panes
