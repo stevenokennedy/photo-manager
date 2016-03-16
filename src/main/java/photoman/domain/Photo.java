@@ -56,6 +56,12 @@ public class Photo extends AbstractEntity
 		categories.add(category);
 	}
 	
+	@Override
+	public String toString()
+	{
+		return String.format("Photo [id:%d, fileName:%s. path:%s", getId(), fileName, path);
+	}
+	
 	//========================================
 	//===        GETTERS & SETTERS         ===
 	//========================================

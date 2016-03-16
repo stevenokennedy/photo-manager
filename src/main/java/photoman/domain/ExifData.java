@@ -8,6 +8,10 @@ import javax.persistence.Entity;
 @Entity
 public class ExifData extends AbstractEntity
 {
+	//========================================
+	//===            FIELDS                ===
+	//========================================
+	
 	@Column(nullable = false)
 	private Long imageWidth;
 	
@@ -33,6 +37,10 @@ public class ExifData extends AbstractEntity
 	
 	private String copyright;
 	
+	//========================================
+	//===          CONSTRUCTORS            ===
+	//========================================
+	
 	public ExifData(Long imageWidth, Long imageHeight, Date dataTaken, String make, String model)
 	{
 		this.imageWidth = imageWidth;
@@ -47,6 +55,21 @@ public class ExifData extends AbstractEntity
 		
 	}
 
+	//========================================
+	//===          PUBLIC METHODS          ===
+	//========================================
+	
+	@Override 
+	public String toString()
+	{
+		return String.format("Exif [width:%d, height:%d, make:%s, model:%s",
+					imageWidth, imageHeight, make, model);
+	}
+	
+	//========================================
+	//===         GETTERS & SETTERS        ===
+	//========================================
+	
 	public Long getImageWidth() {
 		return imageWidth;
 	}

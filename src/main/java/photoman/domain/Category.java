@@ -1,12 +1,16 @@
 package photoman.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+
+import org.hibernate.annotations.Fetch;
 
 @Entity
 public class Category extends AbstractEntity
@@ -27,9 +31,6 @@ public class Category extends AbstractEntity
 	@OneToMany(mappedBy = "parent")
 	private Set<Category> children;
 	
-	@ManyToMany(mappedBy = "categories")
-	private Set<Photo> photos;
-	
 	//========================================
 	//===          CONSTRUCTORS            ===
 	//========================================
@@ -44,6 +45,16 @@ public class Category extends AbstractEntity
 	protected Category() {}
 	
 	//========================================
+	//===         PUBLIC METHODS           ===
+	//========================================
+
+	@Override
+	public String toString()
+	{
+		return String.format("Category [id:%d, name:'%s'", getId(), fullName);
+	}
+	
+	//========================================
 	//===        GETTERS & SETTERS         ===
 	//========================================
 	
@@ -53,12 +64,10 @@ public class Category extends AbstractEntity
 	
 	public void setName(String name) {
 		this.name = name;
+	}	
+	
+	public Category getParent() {
+		return parent;
 	}
-	
-	public Set<Photo> getPhotos() {
-		return photos;
-	}
-	
-	
 	
 }

@@ -33,15 +33,45 @@ public class PhotoMan
 	{
 		return (args) -> 
 		{
+			Category root = catRepo.save(new Category("home", null));
+			Category test1 = catRepo.save(new Category("test1", root));
+			Category test2 = catRepo.save(new Category("test2", root));
+			
 			ExifData exif1 = exifRepo.save(new ExifData(100L, 100L, new Date(), "Nikon", "D5500"));
-			photoRepo.save(new Photo("f1", "C:/path/path1", exif1));
+			Photo p1 = photoRepo.save(new Photo("f1", "C:/path/path1", exif1));
 			
 			ExifData exif2 = exifRepo.save(new ExifData(100L, 100L, new Date(), "Nikon", "D5500"));
 			Photo p2 = photoRepo.save(new Photo("f2", "C:/path/path2", exif2));
 			
-			Category root = catRepo.save(new Category("home", null));
-			p2.addCategory(root);
+			ExifData exif3 = exifRepo.save(new ExifData(100L, 100L, new Date(), "Nikon", "D5500"));
+			Photo p3 = photoRepo.save(new Photo("f2", "C:/path/path3", exif3));
+			
+			ExifData exif4 = exifRepo.save(new ExifData(100L, 100L, new Date(), "Nikon", "D5500"));
+			Photo p4 = photoRepo.save(new Photo("f2", "C:/path/path4", exif4));
+			
+			ExifData exif5 = exifRepo.save(new ExifData(100L, 100L, new Date(), "Nikon", "D5500"));
+			Photo p5 = photoRepo.save(new Photo("f2", "C:/path/path5", exif5));
+			
+			p1.addCategory(root);
+			p2.addCategory(test1);
+			p3.addCategory(test1);
+			p4.addCategory(test1);
+			p5.addCategory(test1);
+			p1.addCategory(test2);
+			p2.addCategory(test2);
+			
+			photoRepo.save(p1);
 			photoRepo.save(p2);
+			photoRepo.save(p3);
+			photoRepo.save(p4);
+			photoRepo.save(p5);
+			
+			logger.info(p1.getExif().toString());
+			logger.info(p1.getCategories().toString());
+			
+			logger.info(catRepo.findPhotosByCategory(test1).toString());
+			logger.info(test1.getParent().toString());
+			logger.info(catRepo.findSubCategories(root).toString());
 			
 		};
 	}
