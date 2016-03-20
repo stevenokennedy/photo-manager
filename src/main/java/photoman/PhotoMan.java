@@ -28,7 +28,7 @@ public class PhotoMan
 		SpringApplication.run(PhotoMan.class, args);
 	}
 	
-	@Bean
+	/*@Bean
 	public CommandLineRunner test(PhotoRepository photoRepo, ExifRepository exifRepo, CategoryRepository catRepo)
 	{
 		return (args) -> 
@@ -74,5 +74,5 @@ public class PhotoMan
 			logger.info(catRepo.findSubCategories(root).toString());
 			
 		};
-	}
+	}*/
 }
