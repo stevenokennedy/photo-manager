@@ -1,16 +1,11 @@
 package photoman.domain;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-
-import org.hibernate.annotations.Fetch;
 
 @Entity
 public class Category extends AbstractEntity
@@ -38,7 +33,7 @@ public class Category extends AbstractEntity
 	public Category(String name, Category parent)
 	{
 		this.name = name;
-		this.fullName = (parent != null ? parent.getName() : "") + "/" + name;
+		this.fullName = (parent != null ? parent.getFullName() : "") + "/" + name;
 		this.parent = parent;
 	}
 	
@@ -62,12 +57,17 @@ public class Category extends AbstractEntity
 		return name;
 	}
 	
-	public void setName(String name) {
-		this.name = name;
-	}	
+	public String getFullName() {
+		return fullName;
+	}
 	
 	public Category getParent() {
 		return parent;
 	}
+	
+	public void setName(String name) {
+		this.name = name;
+		this.fullName = (parent != null ? parent.getFullName() : "") + "/" + name;
+	}	
 	
 }

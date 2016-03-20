@@ -8,6 +8,6 @@ import photoman.domain.Photo;
 
 public interface PhotoRepository extends CrudRepository<Photo, Long> 
 {
-	Set<Photo> findByFileName(String lastName);
+	Set<Photo> findByFileName(String name);
 	Photo findByPath(String path);
 }

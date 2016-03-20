@@ -19,7 +19,7 @@ public class ExifData extends AbstractEntity
 	private Long imageHeight;
 	
 	@Column(nullable = false)
-	private Date dataTaken;
+	private Date dateTaken;
 	
 	@Column(nullable = false)
 	private String make;
@@ -41,11 +41,11 @@ public class ExifData extends AbstractEntity
 	//===          CONSTRUCTORS            ===
 	//========================================
 	
-	public ExifData(Long imageWidth, Long imageHeight, Date dataTaken, String make, String model)
+	public ExifData(Long imageWidth, Long imageHeight, Date dateTaken, String make, String model)
 	{
 		this.imageWidth = imageWidth;
 		this.imageHeight = imageHeight;
-		this.dataTaken = dataTaken;
+		this.dateTaken = dateTaken;
 		this.make = make;
 		this.model = model;
 	}
@@ -62,8 +62,8 @@ public class ExifData extends AbstractEntity
 	@Override 
 	public String toString()
 	{
-		return String.format("Exif [width:%d, height:%d, make:%s, model:%s",
-					imageWidth, imageHeight, make, model);
+		return String.format("Exif [id=%d, width=%s, height=%s, dateTaken=%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$TS, make=%5$s, model=%6$s]", 
+				getId(), imageWidth, imageHeight, dateTaken, make, model);
 	}
 	
 	//========================================
@@ -86,12 +86,12 @@ public class ExifData extends AbstractEntity
 		this.imageHeight = imageHeight;
 	}
 
-	public Date getDataTaken() {
-		return dataTaken;
+	public Date getDateTaken() {
+		return dateTaken;
 	}
 
-	public void setDataTaken(Date dataTaken) {
-		this.dataTaken = dataTaken;
+	public void setDateTaken(Date dateTaken) {
+		this.dateTaken = dateTaken;
 	}
 
 	public String getMake() {

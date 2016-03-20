@@ -56,10 +56,15 @@ public class Photo extends AbstractEntity
 		categories.add(category);
 	}
 	
+	public void removeCategory(Category category)
+	{
+		categories.remove(category);
+	}
+	
 	@Override
 	public String toString()
 	{
-		return String.format("Photo [id:%d, fileName:%s. path:%s", getId(), fileName, path);
+		return String.format("Photo [id=%d, name=%s, path=%s, %s]", getId(), fileName, path, exif != null ? exif.toString() : "<null>");
 	}
 	
 	//========================================
