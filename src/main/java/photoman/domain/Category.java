@@ -46,7 +46,7 @@ public class Category extends AbstractEntity
 	@Override
 	public String toString()
 	{
-		return String.format("Category [id:%d, name:'%s'", getId(), fullName);
+		return String.format("Category [id=%d, name=%s]", getId(), fullName);
 	}
 	
 	//========================================

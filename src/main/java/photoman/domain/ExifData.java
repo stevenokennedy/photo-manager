@@ -8,10 +8,15 @@ import javax.persistence.Entity;
 @Entity
 public class ExifData extends AbstractEntity
 {
+	public static final String ORIENTATION_PORTRAIT = "Portrait";
+	public static final String ORIENTATION_LANDSCAPE = "Landscape";
+	public static final String RES_UNIT_INCH = "inch";
+	public static final String RES_UNIT_CM = "cm";
+	
 	//========================================
 	//===            FIELDS                ===
 	//========================================
-	
+
 	@Column(nullable = false)
 	private Long imageWidth;
 	
