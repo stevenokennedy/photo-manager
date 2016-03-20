@@ -1,4 +1,4 @@
-package photoman.repository.it;
+package photoman.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

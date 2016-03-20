@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 
 public class CategoryTest 
 {
+	
 	@Test
 	public void basicTests()
 	{
@@ -17,6 +18,8 @@ public class CategoryTest
 		
 		assertThat(cat.getParent())
 			.isNull();
+		
+		assertThat(cat).hasToString("Category [id=null, name=/root]");
 		
 		
 		Category cat2 = new Category("child", cat);
@@ -48,5 +51,7 @@ public class CategoryTest
 
 		assertThat(cat3.getParent())
 			.isEqualTo(cat2);
+		
+		assertThat(cat3).hasToString("Category [id=null, name=/root/child/new-sub-child]");
 	}
 }

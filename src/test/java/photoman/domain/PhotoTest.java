@@ -28,7 +28,7 @@ import photoman.domain.Photo;
 import photoman.repository.CategoryRepository;
 import photoman.repository.ExifRepository;
 import photoman.repository.PhotoRepository;
-import photoman.repository.it.PhotoRepositoryTest;
+import photoman.repository.PhotoRepositoryTest;
 
 @TestExecutionListeners({DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class,
 	TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class})
