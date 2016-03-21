@@ -16,6 +16,7 @@ import photoman.domain.Photo;
 import photoman.repository.CategoryRepository;
 import photoman.repository.ExifRepository;
 import photoman.repository.PhotoRepository;
+import photoman.utils.BinaryUtils;
 
 @SpringBootApplication
 @EnableJpaRepositories
@@ -26,6 +27,12 @@ public class PhotoMan
 	public static void main(String[] args)
 	{
 		SpringApplication.run(PhotoMan.class, args);
+	}
+	
+	@Bean
+	public BinaryUtils binaryUtils()
+	{
+		return new BinaryUtils();
 	}
 	
 	/*@Bean
