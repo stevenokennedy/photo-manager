@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+  <CATEGORY id="1" name="root" full_name="/root" />
+  <CATEGORY id="2" name="A" full_name="/root/A" parent_id="1"/>
+  <CATEGORY id="3" name="B" full_name="/root/B" parent_id="1"/>
+  <CATEGORY id="4" name="C" full_name="/root/C" parent_id="1"/>
+  <CATEGORY id="5" name="D" full_name="/root/A/D" parent_id="2"/>
+  <CATEGORY id="6" name="E" full_name="/root/A/E" parent_id="2"/>
+  <CATEGORY id="7" name="F" full_name="/root/B/F" parent_id="3"/>
+  <CATEGORY id="8" name="G" full_name="/root/C/G" parent_id="4"/>
+  <CATEGORY id="9" name="H" full_name="/root/C/G/H" parent_id="8"/>
+</dataset>
