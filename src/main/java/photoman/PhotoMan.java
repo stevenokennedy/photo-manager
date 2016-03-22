@@ -1,21 +1,12 @@
 package photoman;
 
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import photoman.domain.Category;
-import photoman.domain.ExifData;
-import photoman.domain.Photo;
-import photoman.repository.CategoryRepository;
-import photoman.repository.ExifRepository;
-import photoman.repository.PhotoRepository;
 import photoman.utils.BinaryUtils;
 
 @SpringBootApplication

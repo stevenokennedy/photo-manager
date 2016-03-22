@@ -1,16 +1,9 @@
 package photoman.service.nef;
 
 import java.awt.Image;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.ByteOrder;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 import photoman.service.RawProcessorService;
 import photoman.service.nef.utils.NefHeader;

@@ -21,8 +21,6 @@ import photoman.domain.Category;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.Set;
-
 import javax.transaction.Transactional;
 
 import org.assertj.core.groups.Tuple;
@@ -92,12 +90,9 @@ public class CategoryRepositoryTest
 			.containsExactly(new Tuple("/root/A/D", repo.findByFullName("/root/A")),
 				new Tuple("/root/A/E", repo.findByFullName("/root/A")));
 		
-		Category a = repo.findByFullName("/root/A");
+		
 		Category e = repo.findByFullName("/root/A/E"); 
 		repo.delete(e);
-		
-		a = repo.findByFullName("/root/A");
-		Set<Category> cats = repo.findSubCategories(repo.findByFullName("/root/A"));
 		
 		assertThat(repo.findSubCategories(repo.findByFullName("/root/A")))
 			.extracting(FIELD_FULL_NAME, FIELD_PARENT)

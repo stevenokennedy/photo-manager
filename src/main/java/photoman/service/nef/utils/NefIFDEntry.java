@@ -1,6 +1,5 @@
 package photoman.service.nef.utils;
 
-import java.io.IOError;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
@@ -184,6 +183,7 @@ public class NefIFDEntry
 						double denominator = BinaryUtils.readInt(file, bo);
 						values.add(numerator/denominator);
 					}
+					file.seek(currentPos);
 					
 				}
 				break;
@@ -211,6 +211,10 @@ public class NefIFDEntry
 		return entryStartOffset;
 	}
 
+	public String getFieldName() { 
+		return  IFDLookup.ENTRY.get(fieldCode);
+	}
+	
 	public int getFieldCode() { 
 		return fieldCode;
 	}
