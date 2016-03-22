@@ -7,9 +7,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 
 import photoman.utils.BinaryUtils;
-import scala.sys.process.processInternal;
 
 public class NefIFD 
 {
@@ -25,11 +30,13 @@ public class NefIFD
 	
 	private List<NefIFD> subIFDs = new ArrayList<>();
 	
-	private NefIFD exif;
+	private NefIFD exifData;
 	
 	private NefIFD makerNote;
 	
 	private byte[] thumbnailData;
+	
+	private Document xmpData;
 	
 	public NefIFD(RandomAccessFile file, int startOffset, ByteOrder bo) throws IOException
 	{
@@ -48,6 +55,8 @@ public class NefIFD
 			entries.put(entry.getFieldName(), entry);
 		}
 		processSubIFDs();
+		processExifData();
+		processXMPData();
 
 		//Move the pointer to after this IFD
 		file.seek(endOffset);
@@ -62,6 +71,32 @@ public class NefIFD
 			{
 				int offset = (Integer) val;
 				this.subIFDs.add(new NefIFD(file, offset, bo));
+			}
+		}
+	}
+	
+	private void processExifData() throws IOException
+	{
+		NefIFDEntry exif = entries.get(IFDLookup.IFD_EXIF_OFFSET);
+		if(exif != null)
+		{
+			this.exifData = new NefIFD(file, (int)exif.getValues().get(0), bo);
+		}
+	}
+	
+	private void processXMPData()
+	{
+		NefIFDEntry xmp = entries.get(IFDLookup.IFD_APPLICATION_NOTES);
+		if(xmp != null)
+		{
+			List<Byte> xmpBytes = xmp.getValues().stream().map(b -> (Byte) b).collect(Collectors.toList());
+			String xmpString = new String(ArrayUtils.toPrimitive(xmpBytes.toArray(new Byte[xmpBytes.size()])));
+			try 
+			{
+				xmpData = DocumentHelper.parseText(xmpString);
+			} catch (DocumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
@@ -92,6 +127,16 @@ public class NefIFD
 	public NefIFD getSubIFD(int index)
 	{
 		return subIFDs.get(index);
+	}
+	
+	public NefIFD getExifData()
+	{
+		return exifData;
+	}
+	
+	public Document getXmpData()
+	{
+		return xmpData;
 	}
 	
 	public byte[] getThumbnailData() throws IOException
