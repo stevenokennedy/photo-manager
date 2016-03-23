@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -24,19 +22,17 @@ public class NefIFD
 	private RandomAccessFile file;
 	private ByteOrder bo;
 	
-	private int numOfEntries;
+	protected int numOfEntries;
 	
-	private Map<String, NefIFDEntry> entries;
+	protected Map<String, NefIFDEntry> entries;
 	
-	private List<NefIFD> subIFDs = new ArrayList<>();
+	protected List<NefIFD> subIFDs = new ArrayList<>();
 	
-	private NefIFD exifData;
+	protected NefIFD exifData;
 	
-	private NefIFD makerNote;
+	protected byte[] thumbnailData;
 	
-	private byte[] thumbnailData;
-	
-	private Document xmpData;
+	protected Document xmpData;
 	
 	public NefIFD(RandomAccessFile file, int startOffset, ByteOrder bo) throws IOException
 	{
@@ -80,7 +76,7 @@ public class NefIFD
 		NefIFDEntry exif = entries.get(IFDLookup.IFD_EXIF_OFFSET);
 		if(exif != null)
 		{
-			this.exifData = new NefIFD(file, (int)exif.getValues().get(0), bo);
+			this.exifData = new ExifIFD(file, (int)exif.getValues().get(0), bo);
 		}
 	}
 	
@@ -89,8 +85,7 @@ public class NefIFD
 		NefIFDEntry xmp = entries.get(IFDLookup.IFD_APPLICATION_NOTES);
 		if(xmp != null)
 		{
-			List<Byte> xmpBytes = xmp.getValues().stream().map(b -> (Byte) b).collect(Collectors.toList());
-			String xmpString = new String(ArrayUtils.toPrimitive(xmpBytes.toArray(new Byte[xmpBytes.size()])));
+			String xmpString = new String((byte[])xmp.getValues().get(0));
 			try 
 			{
 				xmpData = DocumentHelper.parseText(xmpString);

@@ -2,17 +2,16 @@ package photoman.service.nef.utils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.reflect.Method;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import org.neo4j.cypher.internal.compiler.v2_2.perty.recipe.formatErrors;
+import org.apache.aries.util.IORuntimeException;
 
 import photoman.utils.BinaryUtils;
 
@@ -23,21 +22,36 @@ public class NefIFDEntry
 	//===           CONSTANTS              ===
 	//========================================
 	
-	public static final Map<Integer, FieldType> FIELD_TYPES = new HashMap<>();
-	static
+	//List of FieldTypes for all types indicating name, number of bytes per value 
+	//and processing function to read the value
+	private final FieldType TYPE_BYTE = new FieldType("BYTE", 1, this::processByte);
+	private final FieldType TYPE_ASCII = new FieldType("ASCII", 1, this::processAsciiString);
+	private final FieldType TYPE_SHORT = new FieldType("SHORT", 2, this::processShort);
+	private final FieldType TYPE_LONG = new FieldType("LONG", 4, this::processLong);
+	private final FieldType TYPE_RATIONAL = new FieldType("RATIONAL", 8, this::processRational);
+	private final FieldType TYPE_SBYTE = new FieldType("SBYTE", 1, this::processByte);
+	private final FieldType TYPE_UNDEFINED = new FieldType("UNDEFINED", 1, this::processByte);
+	private final FieldType TYPE_SSHORT = new FieldType("SSHORT", 2, this::processShort);
+	private final FieldType TYPE_SLONG = new FieldType("SLONG", 4, this::processLong);
+	private final FieldType TYPE_SRATIONAL = new FieldType("SRATIONAL", 8, this::processRational);
+	private final FieldType TYPE_FLOAT = new FieldType("FLOAT", 4, this::processFloat);
+	private final FieldType TYPE_DOUBLE = new FieldType("DOUBLE", 8, this::processDouble);
+	
+	//Map of field codes to field types 
+	public final Map<Integer, FieldType> FIELD_TYPES = new HashMap<>();
 	{
-		FIELD_TYPES.put(1, FieldType.BYTE);
-		FIELD_TYPES.put(2, FieldType.ASCII);
-		FIELD_TYPES.put(3, FieldType.SHORT);
-		FIELD_TYPES.put(4, FieldType.LONG);
-		FIELD_TYPES.put(5, FieldType.RATIONAL);
-		FIELD_TYPES.put(6, FieldType.SBYTE);
-		FIELD_TYPES.put(7, FieldType.UNDEFINED);
-		FIELD_TYPES.put(8, FieldType.SSHORT);
-		FIELD_TYPES.put(9, FieldType.SLONG);
-		FIELD_TYPES.put(10, FieldType.SRATIONAL);
-		FIELD_TYPES.put(11, FieldType.FLOAT);
-		FIELD_TYPES.put(12, FieldType.DOUBLE);
+		FIELD_TYPES.put(1, TYPE_BYTE);
+		FIELD_TYPES.put(2, TYPE_ASCII);
+		FIELD_TYPES.put(3, TYPE_SHORT);
+		FIELD_TYPES.put(4, TYPE_LONG);
+		FIELD_TYPES.put(5, TYPE_RATIONAL);
+		FIELD_TYPES.put(6, TYPE_SBYTE);
+		FIELD_TYPES.put(7, TYPE_UNDEFINED);
+		FIELD_TYPES.put(8, TYPE_SSHORT);
+		FIELD_TYPES.put(9, TYPE_SLONG);
+		FIELD_TYPES.put(10, TYPE_SRATIONAL);
+		FIELD_TYPES.put(11, TYPE_FLOAT);
+		FIELD_TYPES.put(12, TYPE_DOUBLE);
 	};
 	
 	//========================================
@@ -74,10 +88,12 @@ public class NefIFDEntry
 	@Override
 	public String toString()
 	{
+		boolean isByteArray = values != null && values.size() > 0 && values.get(0).getClass().getSimpleName().equals("byte[]");
 		return "NefIFDEntry [" + IFDLookup.ENTRY.get(fieldCode) + "(0x" + Integer.toHexString(fieldCode) 
 					+ "), type:" + getFieldType()
 					+ " count:" + valueCount 
-					+ " values: " + values + "]"; 
+					+ " values: " +  (isByteArray ? Arrays.toString((byte[])values.get(0)) : 
+								values) + "]"; 
 	}
 	
 	//========================================
@@ -97,167 +113,101 @@ public class NefIFDEntry
 		this.type = FIELD_TYPES.get(fieldType);
 		this.lookupRequired = (type.numBytes * valueCount) > 4;
 		
-		deriveValue(); 
+		type.process(); 
 		
 		//Return the file pointer to where it was
 		file.seek(currentFilePos);
 	}
 	
-	private void deriveValue() throws IOException
-	{		
-		switch(type)
-		{
-			case UNDEFINED:
-			case SBYTE:
-			case BYTE:
-				processByte();
-				break;
-			case ASCII:
-				processAsciiString();
-				break;
-			case SHORT:
-			case SSHORT:
-				processShort();
-				break;
-			case LONG:
-			case SLONG:
-				processLong();
-				break;
-			case RATIONAL:
-			case SRATIONAL:
-				processRational();
-				break;
-		}
+	private void processByte(Void v)
+	{
+		processWithLookup(n -> this.values.add(BinaryUtils.readByteArray(file, valueCount)));
 	}
 	
-	private void processByte() throws IOException
+	private void processAsciiString(Void v)
 	{
-		byte[] bytes;
-		if(lookupRequired)
-		{
-			bytes = new byte[valueCount];
-			int lookupOffset = BinaryUtils.readInt(file, bo);
-			//Don't record the file pointer until after we've read the lookup value
-			long currentPos = file.getFilePointer();
-			file.seek(lookupOffset);
-			file.read(bytes);
-			file.seek(currentPos);
-		}
-		else
-		{
-			//If it's not a lookup then we'll always read 4 bytes, but only
-			//store 'valueCount' values
-			bytes = new byte[4];
-			file.read(bytes);
-		}
-		for(int i = 0; i < valueCount; i++)
-		{
-			this.values.add(bytes[i]);
-		}
+		processWithLookup(n -> this.values.add(BinaryUtils.readUTF8String(file, valueCount)));
 	}
 	
-	private void processAsciiString() throws IOException
+	private void processShort(Void v)
 	{
-		if(lookupRequired)
-		{
-			int lookupOffset = BinaryUtils.readInt(file, bo);
-			//Don't record the file pointer until after we've read the lookup value
-			long currentPos = file.getFilePointer();
-			file.seek(lookupOffset);
-			this.values.add(BinaryUtils.readUTF8String(file, valueCount));
-			file.seek(currentPos);
-		}
-		else
-		{
-			this.values.add(BinaryUtils.readUTF8String(file, 4));
-		}
+		processWithLookup(n -> IntStream.range(0, valueCount)
+				.forEach(
+					(i)->values.add(BinaryUtils.readShort(file, bo))
+				));
 	}
 	
-	private void processShort() throws IOException
+	private void processLong(Void v)
 	{
-		if(lookupRequired)
+		processWithLookup(n -> IntStream.range(0, valueCount)
+				.forEach(
+					(i)->values.add(BinaryUtils.readInt(file, bo))
+				));
+	}
+	
+	private void processRational(Void v)
+	{
+		processWithLookup(n -> IntStream.range(0, valueCount)
+				.forEach(
+					(i)-> 
+					{
+						double numerator = BinaryUtils.readInt(file, bo);
+						double denominator = BinaryUtils.readInt(file, bo);
+						values.add(numerator/denominator);
+					}
+				));
+	}
+	
+	private void processFloat(Void v)
+	{
+		processWithLookup(n -> IntStream.range(0, valueCount)
+				.forEach(
+					(i)->values.add(BinaryUtils.readFloat(file, bo))
+				));
+	}
+	
+	private void processDouble(Void v)
+	{
+		processWithLookup(n -> IntStream.range(0, valueCount)
+				.forEach(
+					(i)->values.add(BinaryUtils.readDouble(file, bo)))
+				);
+	}
+	
+	private void processWithLookup(Consumer<Void> func)
+	{
+		try
 		{
-			int lookupOffset = BinaryUtils.readInt(file, bo);
-			//Don't record the file pointer until after we've read the lookup value
-			long currentPos = file.getFilePointer();
-			file.seek(lookupOffset);
-			for(int i = 0; i < valueCount; i++)
+			if(lookupRequired)
 			{
-				this.values.add(BinaryUtils.readShort(file, bo));
-			}	
-			//IntStream.iterate(0, i -> i + 1).limit(valueCount - 1).forEach(n -> this.values.add(BinaryUtils.readShort(file, bo)));
-			file.seek(currentPos);
-		}
-		else
-		{
-			long currentPos = file.getFilePointer();
-			for(int i = 0; i < valueCount; i++)
-			{
-				this.values.add(BinaryUtils.readShort(file, bo));
+				int lookupOffset = BinaryUtils.readInt(file, bo);
+				
+				//Don't record the file pointer until after we've read the lookup value
+				long currentPos = file.getFilePointer();
+				file.seek(lookupOffset);
+				
+				//run our function 
+				func.accept(null);
+				
+				//Revert back to where we were after we read the offset value
+				file.seek(currentPos);
 			}
-			//Make sure we get to the end if there's just a single short
-			file.seek(currentPos + 4);
-		}
-	}
-	
-	private void processLong() throws IOException
-	{
-		if(lookupRequired)
-		{
-			int lookupOffset = BinaryUtils.readInt(file, bo);
-			//Don't record the file pointer until after we've read the lookup value
-			long currentPos = file.getFilePointer();
-			file.seek(lookupOffset);
-			for(int i = 0; i < valueCount; i++)
+			else
 			{
-				values.add(BinaryUtils.readInt(file, bo));
+				long currentPos = file.getFilePointer();
+				
+				//run our function 
+				func.accept(null);
+				
+				//Make sure we always end up 4 bytes from where we started, even if we read less
+				//e.g. 1 short, 1 byte etc
+				file.seek(currentPos + 4);
 			}
-			file.seek(currentPos);
 		}
-		else
+		catch(IOException ioe)
 		{
-			//We know that there can only be one value here
-			values.add(BinaryUtils.readInt(file, bo));
-		}
-	}
-	
-	private void processRational() throws IOException
-	{
-		//Lookup always required for RATIONAL since it needs 8 bytes min.
-		int lookupOffset = BinaryUtils.readInt(file, bo);
-		//Don't record the file pointer until after we've read the lookup value
-		long currentPos = file.getFilePointer();
-		file.seek(lookupOffset);
-		for(int i = 0; i < valueCount; i++)
-		{
-			double numerator = BinaryUtils.readInt(file, bo);
-			double denominator = BinaryUtils.readInt(file, bo);
-			values.add(numerator/denominator);
-		}
-		file.seek(currentPos);
-	}
-	
-	private void processFloat() throws IOException
-	{
-		
-	}
-	
-	private void processWithLookup(BooleanSupplier lookupFunction, BooleanSupplier nonLookupFunction) throws IOException
-	{
-		if(lookupRequired)
-		{
-			int lookupOffset = BinaryUtils.readInt(file, bo);
-			//Don't record the file pointer until after we've read the lookup value
-			long currentPos = file.getFilePointer();
-			file.seek(lookupOffset);
-			
-			lookupFunction.getAsBoolean();
-			
-			file.seek(currentPos);
-		}
-		else
-		{
-			nonLookupFunction.getAsBoolean();
+			//Rethrow checked IOExceptions as unchecked IORuntimeExceptions
+			throw new IORuntimeException("Unable to Seek to location in file", ioe);
 		}
 	}
 	
@@ -278,7 +228,7 @@ public class NefIFDEntry
 	}
 
 	public String getFieldType() {
-		return FIELD_TYPES.get(fieldType).name();
+		return FIELD_TYPES.get(fieldType).name;
 	}
 
 	public int getValueCount() {
@@ -293,16 +243,25 @@ public class NefIFDEntry
 	//===      INNER CLASSES & ENUMS       ===
 	//========================================
 	
-	private enum FieldType
-	{
-		BYTE(1), ASCII(1), SHORT(2), LONG(4), RATIONAL(8), SBYTE(1), UNDEFINED(1), SSHORT(2), SLONG(4), SRATIONAL(8), FLOAT(4), DOUBLE(8);
-		
+	private class FieldType
+	{		
+		public final String name; 
 		public final int numBytes;
+		public final Consumer<Void> func;
 		
-		FieldType(int numBytes)
+		FieldType(String name, int numBytes, Consumer<Void> func)
 		{
+			this.name = name;
 			this.numBytes = numBytes;
+			this.func = func;
+		}
+		
+		public void process()
+		{
+			//Run the processing function associated with this type
+			this.func.accept(null);
 		}
 		
 	}
+	
 }

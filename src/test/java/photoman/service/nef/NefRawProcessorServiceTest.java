@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.dom4j.io.OutputFormat;
@@ -23,7 +24,7 @@ public class NefRawProcessorServiceTest
 	{
 		NefRawProcessorService s = new NefRawProcessorService();
 		
-		NefIFD ifd = s.parseFile(getClass().getClassLoader().getResource("nikon_d5500_01.nef").getFile());
+		NefIFD ifd = s.parseFile(getClass().getClassLoader().getResource("DSC_0471.NEF").getFile());
 		assertThat(ifd.getNumOfEntries()).isEqualTo(28);
 		
 		Map<String, NefIFDEntry> entries = ifd.getEntries();
@@ -46,19 +47,20 @@ public class NefRawProcessorServiceTest
 		NefIFD exif = ifd.getExifData();
 		for(NefIFDEntry ent : exif.getEntries().values())
 		{
-			//System.out.println(ent);
+			System.out.println(ent);
 		}
 		
 		
 		NefIFD subIfd = ifd.getSubIFD(0);
-		OutputStream os = new FileOutputStream(new File("C:/Users/steven.j.okennedy/git/photo-manager/target/test-classes/", "full.jpeg"));
+		OutputStream os = new FileOutputStream(new File(System.getProperty("user.home") + "/git/photo-manager/target/test-classes/", "full.jpeg"));
 		os.write(subIfd.getThumbnailData());
 		os.close();
 		
 		subIfd = ifd.getSubIFD(2);
-		os = new FileOutputStream(new File("C:/Users/steven.j.okennedy/git/photo-manager/target/test-classes/", "thumb.jpeg"));
+		os = new FileOutputStream(new File(System.getProperty("user.home") + "/git/photo-manager/target/test-classes/", "thumb.jpeg"));
 		os.write(subIfd.getThumbnailData());
 		os.close();
+		
 	}
 
 }

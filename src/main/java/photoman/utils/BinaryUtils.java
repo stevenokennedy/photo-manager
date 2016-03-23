@@ -2,33 +2,41 @@ package photoman.utils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
+import org.apache.aries.util.IORuntimeException;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class BinaryUtils 
 {
-	public static String readUTF8String(RandomAccessFile file, int length, long offset) throws IOException
+	
+	//========================================
+	//===        PUBLIC METHODS            ===
+	//========================================
+	
+	public static byte[] readByteArray(RandomAccessFile file, int length)
 	{
-		file.seek(offset);
-		return readUTF8String(file, length);
+		try {
+			byte[] bytes = new byte[length];
+			file.read(bytes);
+			return bytes;
+		} 
+		catch (IOException ioe)
+		{
+			throw new IORuntimeException("Error reading bytes " + length + " from file: " + file.toString(), ioe);
+		}
 	}
 	
-	public static String readUTF8String(RandomAccessFile file, int length) throws IOException
+	public static String readUTF8String(RandomAccessFile file, int length)
 	{
 		byte[] bytes = readBasicBytes(file, length, ByteOrder.BIG_ENDIAN);
 		return new String(bytes, Charset.forName("utf-8"));
 		
 	}
 	
-	public static int readShort(RandomAccessFile file, ByteOrder bo, long offset) throws IOException
-	{
-		file.seek(offset);
-		return readShort(file, bo);
-	}
-	
-	public static int readShort(RandomAccessFile file, ByteOrder bo) throws IOException
+	public static int readShort(RandomAccessFile file, ByteOrder bo)
 	{
 		byte[] bytes = readBasicBytes(file, 2, bo);
 		
@@ -42,13 +50,7 @@ public class BinaryUtils
 		return val & 0xFFFF;
 	}
 	
-	public static int readInt(RandomAccessFile file, ByteOrder bo, long offset) throws IOException
-	{
-		file.seek(offset);
-		return readInt(file, bo);
-	}
-	
-	public static int readInt(RandomAccessFile file, ByteOrder bo) throws IOException
+	public static int readInt(RandomAccessFile file, ByteOrder bo)
 	{
 		byte[] bytes = readBasicBytes(file, 4, bo);
 		
@@ -62,14 +64,39 @@ public class BinaryUtils
 		return val & 0xFFFFFFFF;
 	}
 	
-	private static byte[] readBasicBytes(RandomAccessFile file, int length, ByteOrder bo) throws IOException
+	public static float readFloat(RandomAccessFile file, ByteOrder bo)
 	{
-		byte[] bytes = new byte[length];
-		file.readFully(bytes);
-		if(bo.equals(ByteOrder.LITTLE_ENDIAN))
+		byte[] bytes = readBasicBytes(file, 4, bo);
+		ByteBuffer buf = ByteBuffer.wrap(bytes);
+		return buf.getFloat();
+	}
+	
+	public static double readDouble(RandomAccessFile file, ByteOrder bo)
+	{
+		byte[] bytes = readBasicBytes(file, 8, bo);
+		ByteBuffer buf = ByteBuffer.wrap(bytes);
+		return buf.getDouble();
+	}
+	
+	//========================================
+	//===        PRIVATE METHODS           ===
+	//========================================
+	
+	private static byte[] readBasicBytes(RandomAccessFile file, int length, ByteOrder bo)
+	{
+		try
 		{
-			ArrayUtils.reverse(bytes);
+			byte[] bytes = new byte[length];
+			file.readFully(bytes);
+			if(bo.equals(ByteOrder.LITTLE_ENDIAN))
+			{
+				ArrayUtils.reverse(bytes);
+			}
+			return bytes;
 		}
-		return bytes;
+		catch(IOException ioe)
+		{
+			throw new IORuntimeException("Error reading bytes " + length + " from file: " + file.toString(), ioe);
+		}
 	}
 }
