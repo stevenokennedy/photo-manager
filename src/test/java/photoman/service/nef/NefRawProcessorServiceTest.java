@@ -1,19 +1,19 @@
 package photoman.service.nef;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.*;
-
+import photoman.service.nef.utils.ExifIFD;
 import photoman.service.nef.utils.NefIFD;
 import photoman.service.nef.utils.NefIFDEntry;
 
@@ -24,7 +24,7 @@ public class NefRawProcessorServiceTest
 	{
 		NefRawProcessorService s = new NefRawProcessorService();
 		
-		NefIFD ifd = s.parseFile(getClass().getClassLoader().getResource("DSC_0471.NEF").getFile());
+		NefIFD ifd = s.parseFile(getClass().getClassLoader().getResource("DSC_0471.NEF").getFile().replaceFirst("^/(.:/)", "$1"));
 		assertThat(ifd.getNumOfEntries()).isEqualTo(28);
 		
 		Map<String, NefIFDEntry> entries = ifd.getEntries();
@@ -44,8 +44,15 @@ public class NefRawProcessorServiceTest
 		System.out.println(out.toString());
 		
 		System.out.println("-----Exif Data------");
-		NefIFD exif = ifd.getExifData();
+		ExifIFD exif = ifd.getExifData();
 		for(NefIFDEntry ent : exif.getEntries().values())
+		{
+			System.out.println(ent);
+		}
+		
+		System.out.println("-----Maker Note------");
+		NefIFD maker = exif.getMakerNotes();
+		for(NefIFDEntry ent : maker.getEntries().values())
 		{
 			System.out.println(ent);
 		}

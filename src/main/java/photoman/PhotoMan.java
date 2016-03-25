@@ -1,29 +1,18 @@
 package photoman;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-
-import photoman.utils.BinaryUtils;
 
 @SpringBootApplication
 @EnableJpaRepositories
 public class PhotoMan 
 {
-	private static final Logger logger = LoggerFactory.getLogger(PhotoMan.class);
+	//private static final Logger logger = LoggerFactory.getLogger(PhotoMan.class);
 	
 	public static void main(String[] args)
 	{
 		SpringApplication.run(PhotoMan.class, args);
-	}
-	
-	@Bean
-	public BinaryUtils binaryUtils()
-	{
-		return new BinaryUtils();
 	}
 	
 	/*@Bean

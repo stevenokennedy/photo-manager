@@ -1,10 +1,8 @@
-package photoman.service.nef.utils;
+package photoman.service.nef.lookup;
 
-import java.util.HashMap;
-import java.util.Map;
+public class IFDLookup extends Lookup
+{
 
-public class IFDLookup {
-	
 	public static final String IFD_INTEROP_INDEX = "InteropIndex";
 	public static final String IFD_INTEROP_VERSION = "InteropVersion";
 	public static final String IFD_PROCESSING_SOFTWARE = "ProcessingSoftware";
@@ -434,8 +432,7 @@ public class IFDLookup {
 	public static final String IFD_SMOOTHNESS = "Smoothness";
 	public static final String IFD_MOIRE_FILTER = "MoireFilter";
 	
-	public static final Map<Integer, String> ENTRY = new HashMap<>();
-	static
+	public IFDLookup()
 	{
 		ENTRY.put(0x0001, IFD_INTEROP_INDEX);
 		ENTRY.put(0x0002, IFD_INTEROP_VERSION);

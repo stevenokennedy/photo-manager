@@ -1,8 +1,8 @@
 package photoman.service.nef.utils;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
+import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import org.apache.aries.util.IORuntimeException;
 
+import photoman.service.nef.lookup.Lookup;
 import photoman.utils.BinaryUtils;
 
 public class NefIFDEntry
@@ -58,7 +59,7 @@ public class NefIFDEntry
 	//===            FIELDS                ===
 	//========================================
 	
-	private RandomAccessFile file;
+	private SeekableByteChannel input;
 	private ByteOrder bo;
 	
 	private int entryStartOffset;
@@ -69,15 +70,18 @@ public class NefIFDEntry
 	
 	private FieldType type;
 	private boolean lookupRequired;
+	
+	private Lookup lookup;
 	//========================================
 	//===         CONSTRUCTORS             ===
 	//========================================
 	
-	public NefIFDEntry(RandomAccessFile file, ByteOrder bo, int entryStartOffset) throws IOException
+	public NefIFDEntry(SeekableByteChannel input, ByteOrder bo, int entryStartOffset, Lookup lookup) throws IOException
 	{
-		this.file = file;
+		this.input = input;
 		this.bo = bo;
 		this.entryStartOffset = entryStartOffset;
+		this.lookup = lookup;
 		initEntry();
 	}
 	
@@ -89,7 +93,7 @@ public class NefIFDEntry
 	public String toString()
 	{
 		boolean isByteArray = values != null && values.size() > 0 && values.get(0).getClass().getSimpleName().equals("byte[]");
-		return "NefIFDEntry [" + IFDLookup.ENTRY.get(fieldCode) + "(0x" + Integer.toHexString(fieldCode) 
+		return "NefIFDEntry [" + lookup.get(fieldCode) + "(0x" + Integer.toHexString(fieldCode) 
 					+ "), type:" + getFieldType()
 					+ " count:" + valueCount 
 					+ " values: " +  (isByteArray ? Arrays.toString((byte[])values.get(0)) : 
@@ -102,13 +106,13 @@ public class NefIFDEntry
 	
 	private void initEntry() throws IOException
 	{
-		long currentFilePos = file.getFilePointer();
+		long currentFilePos = input.position();
 		
 		//Get the entries values from the file
-		file.seek(entryStartOffset);
-		this.fieldCode = BinaryUtils.readShort(file, bo);
-		this.fieldType = BinaryUtils.readShort(file, bo);
-		this.valueCount = BinaryUtils.readInt(file, bo);
+		input.position(entryStartOffset);
+		this.fieldCode = BinaryUtils.readShort(input, bo);
+		this.fieldType = BinaryUtils.readShort(input, bo);
+		this.valueCount = BinaryUtils.readInt(input, bo);
 		
 		this.type = FIELD_TYPES.get(fieldType);
 		this.lookupRequired = (type.numBytes * valueCount) > 4;
@@ -116,24 +120,24 @@ public class NefIFDEntry
 		type.process(); 
 		
 		//Return the file pointer to where it was
-		file.seek(currentFilePos);
+		input.position(currentFilePos);
 	}
 	
 	private void processByte(Void v)
 	{
-		processWithLookup(n -> this.values.add(BinaryUtils.readByteArray(file, valueCount)));
+		processWithLookup(n -> this.values.add(BinaryUtils.readByteArray(input, valueCount)));
 	}
 	
 	private void processAsciiString(Void v)
 	{
-		processWithLookup(n -> this.values.add(BinaryUtils.readUTF8String(file, valueCount)));
+		processWithLookup(n -> this.values.add(BinaryUtils.readUTF8String(input, valueCount)));
 	}
 	
 	private void processShort(Void v)
 	{
 		processWithLookup(n -> IntStream.range(0, valueCount)
 				.forEach(
-					(i)->values.add(BinaryUtils.readShort(file, bo))
+					(i)->values.add(BinaryUtils.readShort(input, bo))
 				));
 	}
 	
@@ -141,7 +145,7 @@ public class NefIFDEntry
 	{
 		processWithLookup(n -> IntStream.range(0, valueCount)
 				.forEach(
-					(i)->values.add(BinaryUtils.readInt(file, bo))
+					(i)->values.add(BinaryUtils.readInt(input, bo))
 				));
 	}
 	
@@ -151,8 +155,8 @@ public class NefIFDEntry
 				.forEach(
 					(i)-> 
 					{
-						double numerator = BinaryUtils.readInt(file, bo);
-						double denominator = BinaryUtils.readInt(file, bo);
+						double numerator = BinaryUtils.readInt(input, bo);
+						double denominator = BinaryUtils.readInt(input, bo);
 						values.add(numerator/denominator);
 					}
 				));
@@ -162,7 +166,7 @@ public class NefIFDEntry
 	{
 		processWithLookup(n -> IntStream.range(0, valueCount)
 				.forEach(
-					(i)->values.add(BinaryUtils.readFloat(file, bo))
+					(i)->values.add(BinaryUtils.readFloat(input, bo))
 				));
 	}
 	
@@ -170,7 +174,7 @@ public class NefIFDEntry
 	{
 		processWithLookup(n -> IntStream.range(0, valueCount)
 				.forEach(
-					(i)->values.add(BinaryUtils.readDouble(file, bo)))
+					(i)->values.add(BinaryUtils.readDouble(input, bo)))
 				);
 	}
 	
@@ -180,28 +184,28 @@ public class NefIFDEntry
 		{
 			if(lookupRequired)
 			{
-				int lookupOffset = BinaryUtils.readInt(file, bo);
+				int lookupOffset = BinaryUtils.readInt(input, bo);
 				
 				//Don't record the file pointer until after we've read the lookup value
-				long currentPos = file.getFilePointer();
-				file.seek(lookupOffset);
+				long currentPos = input.position();
+				input.position(lookupOffset);
 				
 				//run our function 
 				func.accept(null);
 				
 				//Revert back to where we were after we read the offset value
-				file.seek(currentPos);
+				input.position(currentPos);
 			}
 			else
 			{
-				long currentPos = file.getFilePointer();
+				long currentPos = input.position();
 				
 				//run our function 
 				func.accept(null);
 				
 				//Make sure we always end up 4 bytes from where we started, even if we read less
 				//e.g. 1 short, 1 byte etc
-				file.seek(currentPos + 4);
+				input.position(currentPos + 4);
 			}
 		}
 		catch(IOException ioe)
@@ -220,7 +224,12 @@ public class NefIFDEntry
 	}
 
 	public String getFieldName() { 
-		return  IFDLookup.ENTRY.get(fieldCode);
+		String name = lookup.get(fieldCode);
+		if(name == null)
+		{
+			name = Lookup.UNKNOWN + fieldCode;
+		}
+		return name;
 	}
 	
 	public int getFieldCode() { 

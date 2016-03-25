@@ -1,17 +1,21 @@
 package photoman.service.nef.utils;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.aries.util.IORuntimeException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 
+import photoman.service.nef.lookup.IFDLookup;
+import photoman.service.nef.lookup.Lookup;
 import photoman.utils.BinaryUtils;
 
 public class NefIFD 
@@ -19,8 +23,9 @@ public class NefIFD
 	private static final int IFD_ENTRY_COUNT_SIZE = 2;
 	private static final int IFD_ENTRY_SIZE = 12;
 	
-	private RandomAccessFile file;
+	private SeekableByteChannel input;
 	private ByteOrder bo;
+	protected Lookup lookup;
 	
 	protected int numOfEntries;
 	
@@ -28,34 +33,43 @@ public class NefIFD
 	
 	protected List<NefIFD> subIFDs = new ArrayList<>();
 	
-	protected NefIFD exifData;
+	protected ExifIFD exifData;
 	
 	protected byte[] thumbnailData;
 	
 	protected Document xmpData;
 	
-	public NefIFD(RandomAccessFile file, int startOffset, ByteOrder bo) throws IOException
+	public NefIFD(SeekableByteChannel input, int startOffset, ByteOrder bo, Lookup lookup)
 	{
-		this.file = file;
-		this.bo = bo;
-		
-		file.seek(startOffset);
-		this.numOfEntries = BinaryUtils.readShort(file, bo);
-		
-		int endOffset = startOffset + IFD_ENTRY_COUNT_SIZE + (IFD_ENTRY_SIZE * numOfEntries);
-		
-		entries = new HashMap<>(numOfEntries);
-		for(int i = 0; i < numOfEntries; i++)
+		try
 		{
-			NefIFDEntry entry = new NefIFDEntry(file, bo, startOffset + IFD_ENTRY_COUNT_SIZE + (IFD_ENTRY_SIZE * i));
-			entries.put(entry.getFieldName(), entry);
+			this.input = input;
+			this.bo = bo;
+			this.lookup = lookup;
+			
+			input.position(startOffset);
+			this.numOfEntries = BinaryUtils.readShort(input, bo);
+			
+			int endOffset = startOffset + IFD_ENTRY_COUNT_SIZE + (IFD_ENTRY_SIZE * numOfEntries);
+			
+			entries = new HashMap<>(numOfEntries);
+			for(int i = 0; i < numOfEntries; i++)
+			{
+				NefIFDEntry entry = new NefIFDEntry(input, bo, startOffset + IFD_ENTRY_COUNT_SIZE + (IFD_ENTRY_SIZE * i), lookup);
+				entries.put(entry.getFieldName(), entry);
+			}
+			processSubIFDs();
+			processExifData();
+			processXMPData();
+	
+			//Move the pointer to after this IFD
+			input.position(endOffset);
 		}
-		processSubIFDs();
-		processExifData();
-		processXMPData();
-
-		//Move the pointer to after this IFD
-		file.seek(endOffset);
+		catch(IOException ioe)
+		{
+			//Rethrow IOExceptions as RuntimeIOExceptions
+			throw new IORuntimeException(ioe);
+		}
 	}
 	
 	private void processSubIFDs() throws IOException
@@ -66,7 +80,7 @@ public class NefIFD
 			for(Object val : subEntries.getValues())
 			{
 				int offset = (Integer) val;
-				this.subIFDs.add(new NefIFD(file, offset, bo));
+				this.subIFDs.add(new NefIFD(input, offset, bo, lookup));
 			}
 		}
 	}
@@ -76,7 +90,7 @@ public class NefIFD
 		NefIFDEntry exif = entries.get(IFDLookup.IFD_EXIF_OFFSET);
 		if(exif != null)
 		{
-			this.exifData = new ExifIFD(file, (int)exif.getValues().get(0), bo);
+			this.exifData = new ExifIFD(input, (int)exif.getValues().get(0), bo, lookup);
 		}
 	}
 	
@@ -102,16 +116,20 @@ public class NefIFD
 		NefIFDEntry thumbnailLength = entries.get(IFDLookup.IFD_THUMBNAIL_LENGTH);
 		if(thumbnailOffset != null && thumbnailLength != null)
 		{
-			long originalPos = file.getFilePointer();
-			file.seek((int)thumbnailOffset.getValues().get(0));
+			long originalPos = input.position();
+			input.position((int)thumbnailOffset.getValues().get(0));
 			thumbnailData = new byte[(int)thumbnailLength.getValues().get(0)];
-			file.readFully(thumbnailData);
-			file.seek(originalPos);
+			input.read(ByteBuffer.wrap(thumbnailData));
+			input.position(originalPos);
 		}
 	}
 
 	public int getNumOfEntries() {
 		return numOfEntries;
+	}
+	
+	public ByteOrder getBo() {
+		return bo;
 	}
 	
 	public Map<String, NefIFDEntry> getEntries()
@@ -124,7 +142,7 @@ public class NefIFD
 		return subIFDs.get(index);
 	}
 	
-	public NefIFD getExifData()
+	public ExifIFD getExifData()
 	{
 		return exifData;
 	}
