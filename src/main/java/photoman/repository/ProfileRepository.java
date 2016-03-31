@@ -6,5 +6,5 @@ import photoman.domain.Profile;
 
 public interface ProfileRepository extends JpaRepository<Profile, Long> 
 {
-
+	public Profile findByProfileName(String profileName);
 }

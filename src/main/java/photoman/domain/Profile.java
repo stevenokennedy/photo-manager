@@ -1,9 +1,7 @@
 package photoman.domain;
 
-import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -20,7 +18,7 @@ public class Profile extends AbstractEntity
 	
 	@OneToMany(mappedBy = "profile")
 	@OnDelete(action=OnDeleteAction.CASCADE)
-	public List<Preference> preferences;
+	public Set<Preference> preferences;
 	
 	public Profile(String profileName)
 	{
@@ -28,5 +26,13 @@ public class Profile extends AbstractEntity
 	}
 	
 	protected Profile() { }
+	
+	public String getProfileName() 	{
+		return profileName;
+	}
+	
+	public Set<Preference> getPreferences() {
+		return preferences;
+	}
 	
 }

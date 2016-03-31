@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+  <PROFILE id="1" profile_name="Primary" />
+  <PROFILE id="2" profile_name="Secondary" />
+  <PROFILE id="3" profile_name="Tertiary" />
+</dataset>

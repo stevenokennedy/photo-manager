@@ -1,6 +1,5 @@
 package photoman.service.impl;
 
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Set;
 
