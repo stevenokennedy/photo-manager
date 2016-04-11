@@ -1,6 +1,6 @@
 package photoman.exception;
 
-public class ProfileException extends Exception 
+public class ProfileException extends RuntimeException 
 {
 	private static final long serialVersionUID = 1L; 
 	
@@ -19,6 +19,13 @@ public class ProfileException extends Exception
 	{
 		return new ProfileException("Profile " + 
 					(profileName == null ? "<null>" : profileName) + " does not exist");
+	}
+	
+	
+	public static final ProfileException getDeleteLastProfileException(String profileName)
+	{
+		return new ProfileException("Attempting to delete the last available profile " + 
+					(profileName == null ? "<null>" : profileName));
 	}
 	
 }

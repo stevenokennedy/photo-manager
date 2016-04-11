@@ -8,7 +8,7 @@ import javax.persistence.Entity;
 @Entity
 public class Property extends AbstractEntity
 {
-	@Column
+	@Column(unique = true)
 	private String propName;
 	
 	@Column
