@@ -1,5 +1,6 @@
 package photoman.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -18,7 +19,7 @@ public class Profile extends AbstractEntity
 	
 	@OneToMany(mappedBy = "profile")
 	@OnDelete(action=OnDeleteAction.CASCADE)
-	public Set<Preference> preferences;
+	private Set<Preference> preferences = new HashSet<>();
 	
 	public Profile(String profileName)
 	{

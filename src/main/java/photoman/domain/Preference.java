@@ -30,4 +30,29 @@ public class Preference extends AbstractEntity
 	}
 	
 	protected Preference() {}
+
+	public String getPreferenceName() {
+		return preferenceName;
+	}
+
+	public void setPreferenceName(String preferenceName) {
+		this.preferenceName = preferenceName;
+	}
+
+	public String getValueType() {
+		return valueType;
+	}
+
+	public void setValueType(String valueType) {
+		this.valueType = valueType;
+	}
+
+	public Serializable getValue() {
+		return value;
+	}
+
+	public void setValue(Serializable value) {
+		this.value = value;
+	}
+	
 }

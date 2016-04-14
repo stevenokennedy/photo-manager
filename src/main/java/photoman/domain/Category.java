@@ -60,9 +60,14 @@ public class Category extends AbstractEntity
 	public void moveCategory(Category newParent)
 	{
 		this.parent = newParent;
+		maintainFullName();
 	}
 	
-	public void maintainFullName()
+	//========================================
+	//===         PRIVATE METHODS          ===
+	//========================================
+	
+	private void maintainFullName()
 	{
 		this.fullName = (this.parent != null ? this.parent.getFullName() : "") + "/" + name;
 		for(Category chld : children)

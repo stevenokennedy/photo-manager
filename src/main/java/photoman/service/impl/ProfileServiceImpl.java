@@ -5,6 +5,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import photoman.domain.Preference;
 import photoman.domain.Profile;
 import photoman.domain.Property;
 import photoman.exception.ProfileException;
@@ -78,6 +79,12 @@ public class ProfileServiceImpl implements ProfileService
 		}
 		this.setCurrentProfile(profile);
 		return profile;
+	}
+	
+	public void addPreference(Preference pref)
+	{
+		currentProfile.getPreferences().add(pref);
+		profileRepo.save(currentProfile);
 	}
 	
 	@Transactional

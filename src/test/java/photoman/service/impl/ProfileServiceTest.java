@@ -19,7 +19,7 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import static org.assertj.core.api.Assertions.*;
 
 import photoman.PhotoMan;
-import photoman.exception.ProfileException;
+import photoman.domain.Profile;
 import photoman.repository.ProfileRepository;
 import photoman.service.ProfileService;
 
@@ -45,9 +45,13 @@ public class ProfileServiceTest
 	public void testBascicServices()
 	{		
 		//Initial Get including create of default profile
-		assertThat(profileService.getCurrentProfile())
+		Profile p = profileService.getCurrentProfile();
+		assertThat(p)
 			.extracting("profileName")
 			.containsExactly("Default");
+		
+		assertThat(p.getPreferences())
+			.isEmpty();
 		
 		//Create new profile
 		assertThat(profileService.createProfile("test"))
